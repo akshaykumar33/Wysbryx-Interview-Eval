@@ -37,6 +37,7 @@ import confetti from "canvas-confetti";
 import { toast } from "sonner";
 import { SavedRecord } from "@/types/evaluation";
 import { GROUPS, ALL_CATS, QUICK_TAGS } from "@/utils/constants";
+import { generateEvaluationReport } from "@/utils/engine";
 import { Button } from "@/components/ui/Button";
 import { Card, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -106,7 +107,7 @@ export default function Home() {
     setMounted(true);
     store.initDirectoryFromStorage();
     refreshSavedIndex();
-  }, []);
+  }, [directory]);
 
   // ── localStorage for saved records (not in zustand — browser-only) ──
   const getStorageIndex = (): { id: string }[] => {
@@ -128,22 +129,25 @@ export default function Home() {
         })
         .filter(Boolean);
 
-      // Merge candidate profiles from directory that have reports
+      // Merge candidate profiles from directory
       const dir = useEvalStore.getState().directory;
       const dirRecords: SavedRecord[] = dir
-        .filter((c) => c.name && c.name.trim().length > 0 && c.report)
-        .map((c) => ({
-          id: c.id,
-          candidate: c.name,
-          role: c.role,
-          date: c.interviewDate || new Date().toISOString(),
-          interviewerName: c.interviewerName || "Technical Hiring Manager",
-          candidateEmail: c.email,
-          overallScore: c.report!.overallScore,
-          hiringDecision: c.report!.hiringDecision,
-          categories: c.state || {},
-          report: c.report!,
-        }));
+        .filter((c) => c.name && c.name.trim().length > 0)
+        .map((c) => {
+          const rpt = c.report || generateEvaluationReport(c.name, c.role, c.state || {});
+          return {
+            id: c.id,
+            candidate: c.name,
+            role: c.role,
+            date: c.interviewDate || new Date().toISOString().split("T")[0],
+            interviewerName: c.interviewerName || "Technical Hiring Manager",
+            candidateEmail: c.email,
+            overallScore: rpt.overallScore,
+            hiringDecision: rpt.hiringDecision,
+            categories: c.state || {},
+            report: rpt,
+          };
+        });
 
       // Combine without duplicates
       const map = new Map<string, SavedRecord>();
