@@ -62,6 +62,8 @@ const AYUSH_EVALUATION_DATA: StateMap = {
   "Learning Mindset": { score: 9, covered: true, notes: "Strong. Shows a positive learning attitude, focuses on requirement gathering, planning, execution, and understanding end-user needs before improving solutions." },
 };
 
+const AYUSH_REPORT = generateEvaluationReport("Ayush Jaiswal", "Full Stack Engineer", AYUSH_EVALUATION_DATA);
+
 const AYUSH_PROFILE: CandidateProfile = {
   id: "cand-ayush",
   name: "Ayush Jaiswal",
@@ -76,6 +78,12 @@ const AYUSH_PROFILE: CandidateProfile = {
   interviewerName: "Technical Hiring Manager",
   interviewDate: new Date().toISOString().split("T")[0],
   state: AYUSH_EVALUATION_DATA,
+  report: {
+    ...AYUSH_REPORT,
+    interviewerName: "Technical Hiring Manager",
+    interviewDate: new Date().toISOString().split("T")[0],
+    candidateEmail: "ayush60000@gmail.com",
+  },
 };
 
 // ─── Persistence Helpers ──────────────────────────────────────
@@ -359,11 +367,20 @@ export const useEvalStore = create<EvalStore>((set, get) => ({
   },
 
   selectCandidate: (cand) => {
+    if (!cand) return;
     const candState =
-      cand.state && Object.keys(cand.state).length > 0 ? cand.state : AYUSH_EVALUATION_DATA;
-    const fullReport = cand.report || generateEvaluationReport(cand.name, cand.role, candState);
+      cand.state && Object.keys(cand.state).length > 0 ? cand.state : initialStates();
+    const fullReport =
+      cand.report ||
+      generateEvaluationReport(
+        cand.name || "Candidate",
+        cand.role || "Full Stack Engineer",
+        candState
+      );
+    const updatedCand = { ...cand, state: candState, report: fullReport };
+
     set({
-      currentCandidate: cand,
+      currentCandidate: updatedCand,
       interviewerName: cand.interviewerName || "Technical Hiring Manager",
       interviewDate: cand.interviewDate || new Date().toISOString().split("T")[0],
       evaluationState: candState,

@@ -91,7 +91,9 @@ export function CandidateDataTable({ candidates, onSelectCandidate }: CandidateD
       header: "",
       cell: (info) => (
         <button
+          type="button"
           onClick={(e) => {
+            e.preventDefault();
             e.stopPropagation();
             onSelectCandidate(info.row.original);
           }}

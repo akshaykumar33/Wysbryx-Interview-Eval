@@ -127,7 +127,32 @@ export default function Home() {
           return raw ? JSON.parse(raw) : null;
         })
         .filter(Boolean);
-      setSavedRecords(loaded);
+
+      // Merge candidate profiles from directory that have reports
+      const dir = useEvalStore.getState().directory;
+      const dirRecords: SavedRecord[] = dir
+        .filter((c) => c.name && c.name.trim().length > 0 && c.report)
+        .map((c) => ({
+          id: c.id,
+          candidate: c.name,
+          role: c.role,
+          date: c.interviewDate || new Date().toISOString(),
+          interviewerName: c.interviewerName || "Technical Hiring Manager",
+          candidateEmail: c.email,
+          overallScore: c.report!.overallScore,
+          hiringDecision: c.report!.hiringDecision,
+          categories: c.state || {},
+          report: c.report!,
+        }));
+
+      // Combine without duplicates
+      const map = new Map<string, SavedRecord>();
+      loaded.forEach((r) => map.set(r.id, r));
+      dirRecords.forEach((r) => {
+        if (!map.has(r.id)) map.set(r.id, r);
+      });
+
+      setSavedRecords(Array.from(map.values()));
     } catch {
       setSavedRecords([]);
     }
