@@ -86,7 +86,10 @@ function loadDirectoryFromStorage(): CandidateProfile[] {
     const raw = localStorage.getItem("eval-directory");
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        const valid = parsed.filter((c: CandidateProfile) => c.name && c.name.trim().length > 0);
+        if (valid.length > 0) return valid;
+      }
     }
   } catch (e) {
     console.error("Failed to load candidate directory from localStorage:", e);
@@ -282,6 +285,9 @@ export const useEvalStore = create<EvalStore>((set, get) => ({
   },
   syncCurrentToDirectory: () => {
     const { currentCandidate, directory, evaluationState, interviewerName, interviewDate } = get();
+    // Ignore syncing if name is blank
+    if (!currentCandidate.name || currentCandidate.name.trim().length === 0) return;
+
     const candToSync = {
       ...currentCandidate,
       state: evaluationState,
@@ -293,8 +299,10 @@ export const useEvalStore = create<EvalStore>((set, get) => ({
       ? directory.map((c) => (c.id === currentCandidate.id ? candToSync : c))
       : [candToSync, ...directory];
 
-    set({ currentCandidate: candToSync, directory: updatedDir });
-    saveDirectoryToStorage(updatedDir);
+    const cleanDir = updatedDir.filter((c) => c.name && c.name.trim().length > 0);
+
+    set({ currentCandidate: candToSync, directory: cleanDir });
+    saveDirectoryToStorage(cleanDir);
   },
 
   // ── Saved Records ──

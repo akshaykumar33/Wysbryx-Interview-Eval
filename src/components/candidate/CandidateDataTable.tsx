@@ -104,8 +104,10 @@ export function CandidateDataTable({ candidates, onSelectCandidate }: CandidateD
     }),
   ];
 
+  const validCandidates = candidates.filter((c) => c.name && c.name.trim().length > 0);
+
   const table = useReactTable({
-    data: candidates,
+    data: validCandidates,
     columns,
     state: { sorting, globalFilter },
     onSortingChange: setSorting,
