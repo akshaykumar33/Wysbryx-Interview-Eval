@@ -140,7 +140,7 @@ export function getAllCandidatesFromDb(): CandidateProfile[] {
   const db = getDb();
   const rows = db.prepare("SELECT * FROM candidates ORDER BY updatedAt DESC").all() as Record<string, string>[];
 
-  return rows.map((row) => ({
+  const parsed = rows.map((row) => ({
     id: row.id,
     name: row.name,
     role: row.role,
@@ -156,11 +156,46 @@ export function getAllCandidatesFromDb(): CandidateProfile[] {
     state: row.state ? JSON.parse(row.state) : {},
     report: row.report ? JSON.parse(row.report) : undefined,
   }));
+
+  // Deduplicate by normalized email if present
+  const emailMap = new Map<string, CandidateProfile>();
+  const list: CandidateProfile[] = [];
+
+  for (const item of parsed) {
+    const normEmail = item.email ? item.email.trim().toLowerCase() : "";
+    if (normEmail) {
+      if (!emailMap.has(normEmail)) {
+        emailMap.set(normEmail, item);
+        list.push(item);
+      } else {
+        // If duplicate email exists, remove from DB to keep database clean
+        db.prepare("DELETE FROM candidates WHERE id = ?").run(item.id);
+      }
+    } else {
+      list.push(item);
+    }
+  }
+
+  return list;
 }
 
 export function upsertCandidateInDb(candidate: CandidateProfile): CandidateProfile {
   const db = getDb();
   const now = new Date().toISOString();
+
+  const normEmail = candidate.email ? candidate.email.trim().toLowerCase() : "";
+
+  // Check if candidate with matching email exists under another ID
+  if (normEmail) {
+    const existing = db
+      .prepare("SELECT id FROM candidates WHERE LOWER(TRIM(email)) = ? AND id != ?")
+      .get(normEmail, candidate.id) as { id: string } | undefined;
+
+    if (existing) {
+      // Delete existing duplicate ID row before saving
+      db.prepare("DELETE FROM candidates WHERE id = ?").run(existing.id);
+    }
+  }
 
   const stmt = db.prepare(`
     INSERT INTO candidates (

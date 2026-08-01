@@ -21,6 +21,8 @@ export interface EvaluationReport {
   interviewerName?: string;
   interviewDate?: string;
   candidateEmail?: string;
+  experience?: string;
+  currentCompany?: string;
   groupScores: { title: string; score: number }[];
   categories: {
     name: string;
@@ -43,6 +45,8 @@ export interface SavedRecord {
   id: string;
   candidate: string;
   role: string;
+  experience?: string;
+  currentCompany?: string;
   date: string;
   interviewerName?: string;
   candidateEmail?: string;

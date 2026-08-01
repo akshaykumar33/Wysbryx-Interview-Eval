@@ -101,6 +101,7 @@ export default function Home() {
   const generateReport = useEvalStore((s) => s.generateReport);
   const syncCurrentToDirectory = useEvalStore((s) => s.syncCurrentToDirectory);
   const initDirectoryFromStorage = useEvalStore((s) => s.initDirectoryFromStorage);
+  const deleteCandidateFromDirectory = useEvalStore((s) => s.deleteCandidateFromDirectory);
 
   const isProfileComplete = currentCandidate.name.trim().length > 0 && currentCandidate.email.trim().length > 0;
   const isEditingExisting = directory.some((c) => c.id === currentCandidate.id);
@@ -134,7 +135,29 @@ export default function Home() {
     const data = savedRecords.find((r) => r.id === id);
     if (!data) return;
     const s = useEvalStore.getState();
-    s.setCurrentCandidate({ ...s.currentCandidate, name: data.candidate, role: data.role, email: data.candidateEmail || s.currentCandidate.email });
+
+    const existingCandidate = s.directory.find(
+      (c) => c.id === id || (data.candidateEmail && c.email && c.email.trim().toLowerCase() === data.candidateEmail.trim().toLowerCase())
+    );
+
+    const loadedCand: import("@/types/candidate").CandidateProfile = existingCandidate || {
+      id: data.id || "cand-" + Date.now(),
+      name: data.candidate,
+      role: data.role,
+      experience: data.experience || data.report?.experience || "",
+      email: data.candidateEmail || "",
+      phone: "",
+      location: "",
+      currentCompany: data.currentCompany || data.report?.currentCompany || "",
+      skills: [],
+      evaluationStatus: "Completed",
+      interviewerName: data.interviewerName || "Technical Hiring Manager",
+      interviewDate: data.date ? new Date(data.date).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
+      state: data.categories,
+      report: data.report,
+    };
+
+    s.setCurrentCandidate(loadedCand);
     if (data.interviewerName) s.setInterviewerName(data.interviewerName);
     s.setEvaluationState(data.categories);
     s.setReport(data.report);
@@ -802,6 +825,10 @@ export default function Home() {
               <CandidateDataTable
                 candidates={directory}
                 onSelectCandidate={handleSelectCandidate}
+                onDeleteCandidate={(id) => {
+                  deleteCandidateFromDirectory(id);
+                  toast.success("Candidate removed from directory");
+                }}
               />
             </Card>
           </div>

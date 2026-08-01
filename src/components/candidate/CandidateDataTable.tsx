@@ -11,16 +11,17 @@ import {
   SortingState,
 } from "@tanstack/react-table";
 import { CandidateProfile } from "@/types/candidate";
-import { Search, ArrowUpDown, ArrowRight, FileSpreadsheet, Building2, Clock, CheckCircle } from "lucide-react";
+import { Search, ArrowUpDown, ArrowRight, FileSpreadsheet, Building2, Clock, CheckCircle, Trash2 } from "lucide-react";
 
 interface CandidateDataTableProps {
   candidates: CandidateProfile[];
   onSelectCandidate: (candidate: CandidateProfile) => void;
+  onDeleteCandidate?: (id: string) => void;
 }
 
 const columnHelper = createColumnHelper<CandidateProfile>();
 
-export const CandidateDataTable = memo(function CandidateDataTable({ candidates, onSelectCandidate }: CandidateDataTableProps) {
+export const CandidateDataTable = memo(function CandidateDataTable({ candidates, onSelectCandidate, onDeleteCandidate }: CandidateDataTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
 
@@ -91,22 +92,38 @@ export const CandidateDataTable = memo(function CandidateDataTable({ candidates,
         id: "actions",
         header: "",
         cell: (info) => (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onSelectCandidate(info.row.original);
-            }}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-white font-semibold text-xs shadow-md shadow-amber-500/20 hover:shadow-lg hover:shadow-amber-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer whitespace-nowrap"
-          >
-            <span>Review Profile</span>
-            <ArrowRight className="h-3.5 w-3.5" />
-          </button>
+          <div className="flex items-center gap-2 justify-end">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onSelectCandidate(info.row.original);
+              }}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-white font-semibold text-xs shadow-md shadow-amber-500/20 hover:shadow-lg hover:shadow-amber-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer whitespace-nowrap"
+            >
+              <span>Review Profile</span>
+              <ArrowRight className="h-3.5 w-3.5" />
+            </button>
+            {onDeleteCandidate && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onDeleteCandidate(info.row.original.id);
+                }}
+                className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900/80 text-slate-400 hover:text-rose-500 hover:border-rose-500/50 hover:bg-rose-500/10 transition-all cursor-pointer"
+                title="Delete Candidate"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            )}
+          </div>
         ),
       }),
     ],
-    [onSelectCandidate]
+    [onSelectCandidate, onDeleteCandidate]
   );
 
   const validCandidates = useMemo(

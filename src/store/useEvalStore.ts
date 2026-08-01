@@ -140,6 +140,7 @@ interface EvalStore {
   setDirectory: (dir: CandidateProfile[]) => void;
   syncCurrentToDirectory: () => void;
   initDirectoryFromStorage: () => Promise<void>;
+  deleteCandidateFromDirectory: (id: string) => Promise<void>;
 
   // ── Saved Records ──
   savedRecords: SavedRecord[];
@@ -290,15 +291,48 @@ export const useEvalStore = create<EvalStore>((set, get) => ({
       interviewerName,
       interviewDate,
     };
-    const exists = directory.some((c) => c.id === currentCandidate.id);
-    const updatedDir = exists
-      ? directory.map((c) => (c.id === currentCandidate.id ? candToSync : c))
-      : [candToSync, ...directory];
 
-    const cleanDir = updatedDir.filter((c) => c.name && c.name.trim().length > 0);
+    const normEmail = candToSync.email ? candToSync.email.trim().toLowerCase() : "";
+
+    const existingIndex = directory.findIndex(
+      (c) => c.id === candToSync.id || (normEmail.length > 0 && c.email && c.email.trim().toLowerCase() === normEmail)
+    );
+
+    let updatedDir: CandidateProfile[];
+    if (existingIndex >= 0) {
+      const matchedId = directory[existingIndex].id;
+      const mergedCand = { ...candToSync, id: matchedId };
+      updatedDir = directory.map((c, idx) => (idx === existingIndex ? mergedCand : c));
+    } else {
+      updatedDir = [candToSync, ...directory];
+    }
+
+    // Deduplicate by email
+    const emailSeen = new Set<string>();
+    const cleanDir = updatedDir.filter((c) => {
+      if (!c.name || c.name.trim().length === 0) return false;
+      const e = c.email ? c.email.trim().toLowerCase() : "";
+      if (e) {
+        if (emailSeen.has(e)) return false;
+        emailSeen.add(e);
+      }
+      return true;
+    });
 
     set({ currentCandidate: candToSync, directory: cleanDir });
     syncCandidateToServer(candToSync);
+  },
+
+  deleteCandidateFromDirectory: async (id: string) => {
+    try {
+      await fetch(`/api/candidates?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+    } catch (e) {
+      console.error("Failed to delete candidate on server:", e);
+    }
+    const { directory } = get();
+    const updatedDir = directory.filter((c) => c.id !== id);
+    set({ directory: updatedDir });
+    get().refreshSavedRecords();
   },
 
   // ── Saved Records ──
@@ -324,6 +358,8 @@ export const useEvalStore = create<EvalStore>((set, get) => ({
           id: c.id,
           candidate: c.name,
           role: c.role,
+          experience: c.experience,
+          currentCompany: c.currentCompany,
           date: c.interviewDate || new Date().toISOString(),
           interviewerName: c.interviewerName || "Technical Hiring Manager",
           candidateEmail: c.email,
@@ -480,6 +516,8 @@ export const useEvalStore = create<EvalStore>((set, get) => ({
         interviewerName,
         interviewDate,
         candidateEmail: currentCandidate.email,
+        experience: currentCandidate.experience,
+        currentCompany: currentCandidate.currentCompany,
       };
 
       const updatedCandidate: CandidateProfile = {
@@ -491,10 +529,19 @@ export const useEvalStore = create<EvalStore>((set, get) => ({
         state: evaluationState,
       };
 
-      const exists = directory.some((c) => c.id === updatedCandidate.id);
-      const updatedDir = exists
-        ? directory.map((c) => (c.id === updatedCandidate.id ? updatedCandidate : c))
-        : [updatedCandidate, ...directory];
+      const normEmail = updatedCandidate.email ? updatedCandidate.email.trim().toLowerCase() : "";
+      const existingIndex = directory.findIndex(
+        (c) => c.id === updatedCandidate.id || (normEmail.length > 0 && c.email && c.email.trim().toLowerCase() === normEmail)
+      );
+
+      let updatedDir: CandidateProfile[];
+      if (existingIndex >= 0) {
+        const matchedId = directory[existingIndex].id;
+        const mergedCand = { ...updatedCandidate, id: matchedId };
+        updatedDir = directory.map((c, idx) => (idx === existingIndex ? mergedCand : c));
+      } else {
+        updatedDir = [updatedCandidate, ...directory];
+      }
 
       set({
         report: fullReport,
@@ -508,9 +555,11 @@ export const useEvalStore = create<EvalStore>((set, get) => ({
 
       // Save evaluation record to server DB
       const record: SavedRecord = {
-        id: "eval-" + Date.now(),
+        id: updatedCandidate.id,
         candidate: updatedCandidate.name,
         role: updatedCandidate.role,
+        experience: updatedCandidate.experience,
+        currentCompany: updatedCandidate.currentCompany,
         date: interviewDate ? new Date(interviewDate).toISOString() : new Date().toISOString(),
         interviewerName,
         candidateEmail: updatedCandidate.email,
