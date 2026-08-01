@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo, memo } from "react";
 import {
   createColumnHelper,
   flexRender,
@@ -11,8 +11,7 @@ import {
   SortingState,
 } from "@tanstack/react-table";
 import { CandidateProfile } from "@/types/candidate";
-import { Search, ArrowUpDown, ArrowRight, FileSpreadsheet, Building2, Clock, CheckCircle, Sparkles } from "lucide-react";
-import { Button } from "@/components/ui/Button";
+import { Search, ArrowUpDown, ArrowRight, FileSpreadsheet, Building2, Clock, CheckCircle } from "lucide-react";
 
 interface CandidateDataTableProps {
   candidates: CandidateProfile[];
@@ -21,92 +20,99 @@ interface CandidateDataTableProps {
 
 const columnHelper = createColumnHelper<CandidateProfile>();
 
-export function CandidateDataTable({ candidates, onSelectCandidate }: CandidateDataTableProps) {
+export const CandidateDataTable = memo(function CandidateDataTable({ candidates, onSelectCandidate }: CandidateDataTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
 
-  const columns = [
-    columnHelper.accessor("name", {
-      header: ({ column }) => (
-        <button
-          className="flex items-center gap-1 font-mono text-[11px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-bold hover:text-amber-500 transition-colors"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          CANDIDATE <ArrowUpDown className="h-3 w-3 text-amber-500" />
-        </button>
-      ),
-      cell: (info) => (
-        <div>
-          <div className="font-bold text-slate-900 dark:text-slate-100 text-sm flex items-center gap-1.5">
-            {info.getValue()}
+  const columns = useMemo(
+    () => [
+      columnHelper.accessor("name", {
+        header: ({ column }) => (
+          <button
+            type="button"
+            className="flex items-center gap-1 font-mono text-[11px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-bold hover:text-amber-500 transition-colors"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            CANDIDATE <ArrowUpDown className="h-3 w-3 text-amber-500" />
+          </button>
+        ),
+        cell: (info) => (
+          <div>
+            <div className="font-bold text-slate-900 dark:text-slate-100 text-sm flex items-center gap-1.5">
+              {info.getValue()}
+            </div>
+            <div className="text-xs text-slate-500 dark:text-slate-400 font-mono mt-0.5">{info.row.original.email}</div>
           </div>
-          <div className="text-xs text-slate-500 dark:text-slate-400 font-mono mt-0.5">{info.row.original.email}</div>
-        </div>
-      ),
-    }),
-    columnHelper.accessor("role", {
-      header: "ROLE",
-      cell: (info) => (
-        <span className="inline-block px-3 py-1 rounded-lg bg-purple-500/10 dark:bg-purple-500/15 border border-purple-500/30 text-purple-700 dark:text-purple-300 font-mono text-xs font-semibold whitespace-nowrap">
-          {info.getValue()}
-        </span>
-      ),
-    }),
-    columnHelper.accessor("experience", {
-      header: "EXPERIENCE",
-      cell: (info) => (
-        <span className="text-xs text-slate-700 dark:text-slate-300 flex items-center gap-1.5 font-mono font-medium whitespace-nowrap">
-          <Clock className="h-3.5 w-3.5 text-amber-500" /> {info.getValue()}
-        </span>
-      ),
-    }),
-    columnHelper.accessor("currentCompany", {
-      header: "COMPANY",
-      cell: (info) => (
-        <span className="text-xs text-slate-700 dark:text-slate-300 flex items-center gap-1.5 font-medium whitespace-nowrap">
-          <Building2 className="h-3.5 w-3.5 text-amber-500" /> {info.getValue()}
-        </span>
-      ),
-    }),
-    columnHelper.accessor("evaluationStatus", {
-      header: "STATUS",
-      cell: (info) => {
-        const val = info.getValue();
-        const styles =
-          val === "Completed"
-            ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30 font-bold"
-            : val === "In Review"
-            ? "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30 font-bold"
-            : "bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-300 dark:border-slate-700";
-
-        return (
-          <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-mono border whitespace-nowrap shadow-sm ${styles}`}>
-            <CheckCircle className="h-3 w-3" /> {val}
+        ),
+      }),
+      columnHelper.accessor("role", {
+        header: "ROLE",
+        cell: (info) => (
+          <span className="inline-block px-3 py-1 rounded-lg bg-purple-500/10 dark:bg-purple-500/15 border border-purple-500/30 text-purple-700 dark:text-purple-300 font-mono text-xs font-semibold whitespace-nowrap">
+            {info.getValue()}
           </span>
-        );
-      },
-    }),
-    columnHelper.display({
-      id: "actions",
-      header: "",
-      cell: (info) => (
-        <button
-          type="button"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            onSelectCandidate(info.row.original);
-          }}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-white font-semibold text-xs shadow-md shadow-amber-500/20 hover:shadow-lg hover:shadow-amber-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer whitespace-nowrap"
-        >
-          <span>Review Profile</span>
-          <ArrowRight className="h-3.5 w-3.5" />
-        </button>
-      ),
-    }),
-  ];
+        ),
+      }),
+      columnHelper.accessor("experience", {
+        header: "EXPERIENCE",
+        cell: (info) => (
+          <span className="text-xs text-slate-700 dark:text-slate-300 flex items-center gap-1.5 font-mono font-medium whitespace-nowrap">
+            <Clock className="h-3.5 w-3.5 text-amber-500" /> {info.getValue()}
+          </span>
+        ),
+      }),
+      columnHelper.accessor("currentCompany", {
+        header: "COMPANY",
+        cell: (info) => (
+          <span className="text-xs text-slate-700 dark:text-slate-300 flex items-center gap-1.5 font-medium whitespace-nowrap">
+            <Building2 className="h-3.5 w-3.5 text-amber-500" /> {info.getValue()}
+          </span>
+        ),
+      }),
+      columnHelper.accessor("evaluationStatus", {
+        header: "STATUS",
+        cell: (info) => {
+          const val = info.getValue();
+          const styles =
+            val === "Completed"
+              ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30 font-bold"
+              : val === "In Review"
+              ? "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30 font-bold"
+              : "bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-300 dark:border-slate-700";
 
-  const validCandidates = candidates.filter((c) => c.name && c.name.trim().length > 0);
+          return (
+            <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-mono border whitespace-nowrap shadow-sm ${styles}`}>
+              <CheckCircle className="h-3 w-3" /> {val}
+            </span>
+          );
+        },
+      }),
+      columnHelper.display({
+        id: "actions",
+        header: "",
+        cell: (info) => (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onSelectCandidate(info.row.original);
+            }}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-white font-semibold text-xs shadow-md shadow-amber-500/20 hover:shadow-lg hover:shadow-amber-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer whitespace-nowrap"
+          >
+            <span>Review Profile</span>
+            <ArrowRight className="h-3.5 w-3.5" />
+          </button>
+        ),
+      }),
+    ],
+    [onSelectCandidate]
+  );
+
+  const validCandidates = useMemo(
+    () => candidates.filter((c) => c.name && c.name.trim().length > 0),
+    [candidates]
+  );
 
   const table = useReactTable({
     data: validCandidates,
@@ -148,6 +154,7 @@ export function CandidateDataTable({ candidates, onSelectCandidate }: CandidateD
           />
         </div>
         <button
+          type="button"
           onClick={exportCSV}
           className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 text-white font-semibold text-xs shadow-md shadow-emerald-500/20 hover:shadow-lg hover:shadow-emerald-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer whitespace-nowrap"
         >
@@ -189,4 +196,4 @@ export function CandidateDataTable({ candidates, onSelectCandidate }: CandidateD
       </div>
     </div>
   );
-}
+});

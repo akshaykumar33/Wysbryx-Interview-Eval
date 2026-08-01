@@ -37,7 +37,6 @@ import confetti from "canvas-confetti";
 import { toast } from "sonner";
 import { SavedRecord } from "@/types/evaluation";
 import { GROUPS, ALL_CATS, QUICK_TAGS } from "@/utils/constants";
-import { generateEvaluationReport } from "@/utils/engine";
 import { Button } from "@/components/ui/Button";
 import { Card, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -70,157 +69,78 @@ const ROLE_OPTIONS = [
 ];
 
 export default function Home() {
-  // ── Zustand Store ──
-  const store = useEvalStore();
-  const {
-    activeView, setActiveView,
-    activeGroupIndex, setActiveGroupIndex,
-    currentCandidate, updateCandidateField,
-    interviewerName, setInterviewerName,
-    interviewDate, setInterviewDate,
-    evaluationState,
-    setScore, setCovered, setNotes,
-    report,
-    directory,
-    savedRecords, setSavedRecords,
-    isGenerating,
-    savedOpen, setSavedOpen,
-    activeRubric, setActiveRubric,
-    resetForNewCandidate,
-    startEvaluation,
-    selectCandidate,
-    loadAyushData,
-    generateReport,
-    syncCurrentToDirectory,
-  } = store;
+  // ── Atomic Zustand Store Selectors (0ms re-render overhead) ──
+  const activeView = useEvalStore((s) => s.activeView);
+  const setActiveView = useEvalStore((s) => s.setActiveView);
+  const activeGroupIndex = useEvalStore((s) => s.activeGroupIndex);
+  const setActiveGroupIndex = useEvalStore((s) => s.setActiveGroupIndex);
+  const currentCandidate = useEvalStore((s) => s.currentCandidate);
+  const updateCandidateField = useEvalStore((s) => s.updateCandidateField);
+  const interviewerName = useEvalStore((s) => s.interviewerName);
+  const setInterviewerName = useEvalStore((s) => s.setInterviewerName);
+  const interviewDate = useEvalStore((s) => s.interviewDate);
+  const setInterviewDate = useEvalStore((s) => s.setInterviewDate);
+  const evaluationState = useEvalStore((s) => s.evaluationState);
+  const setScore = useEvalStore((s) => s.setScore);
+  const setCovered = useEvalStore((s) => s.setCovered);
+  const setNotes = useEvalStore((s) => s.setNotes);
+  const report = useEvalStore((s) => s.report);
+  const directory = useEvalStore((s) => s.directory);
+  const savedRecords = useEvalStore((s) => s.savedRecords);
+  const setSavedRecords = useEvalStore((s) => s.setSavedRecords);
+  const isGenerating = useEvalStore((s) => s.isGenerating);
+  const savedOpen = useEvalStore((s) => s.savedOpen);
+  const setSavedOpen = useEvalStore((s) => s.setSavedOpen);
+  const activeRubric = useEvalStore((s) => s.activeRubric);
+  const setActiveRubric = useEvalStore((s) => s.setActiveRubric);
 
-  const isProfileComplete = store.isProfileComplete();
-  const isEditingExisting = store.isEditingExisting();
-  const ratedCount = store.ratedCount();
-  const progressPct = store.progressPct();
+  const resetForNewCandidate = useEvalStore((s) => s.resetForNewCandidate);
+  const startEvaluation = useEvalStore((s) => s.startEvaluation);
+  const selectCandidate = useEvalStore((s) => s.selectCandidate);
+  const loadAyushData = useEvalStore((s) => s.loadAyushData);
+  const generateReport = useEvalStore((s) => s.generateReport);
+  const syncCurrentToDirectory = useEvalStore((s) => s.syncCurrentToDirectory);
+  const initDirectoryFromStorage = useEvalStore((s) => s.initDirectoryFromStorage);
+
+  const isProfileComplete = currentCandidate.name.trim().length > 0 && currentCandidate.email.trim().length > 0;
+  const isEditingExisting = directory.some((c) => c.id === currentCandidate.id);
+  const ratedCount = Object.values(evaluationState).filter(
+    (s) => s.score > 0 || s.covered !== null || s.notes.trim() !== ""
+  ).length;
+  const progressPct = Math.round((ratedCount / ALL_CATS.length) * 100);
 
   // ── Theme ──
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
+  const refreshSavedRecords = useEvalStore((s) => s.refreshSavedRecords);
+
   useEffect(() => {
     setMounted(true);
-    store.initDirectoryFromStorage();
-    refreshSavedIndex();
-  }, [directory]);
-
-  // ── localStorage for saved records (not in zustand — browser-only) ──
-  const getStorageIndex = (): { id: string }[] => {
-    try {
-      const raw = localStorage.getItem("eval-index");
-      return raw ? JSON.parse(raw) : [];
-    } catch {
-      return [];
-    }
-  };
-
-  const refreshSavedIndex = () => {
-    try {
-      const idx = getStorageIndex();
-      const loaded: SavedRecord[] = idx
-        .map((item) => {
-          const raw = localStorage.getItem(item.id);
-          return raw ? JSON.parse(raw) : null;
-        })
-        .filter(Boolean);
-
-      // Merge candidate profiles from directory
-      const dir = useEvalStore.getState().directory;
-      const dirRecords: SavedRecord[] = dir
-        .filter((c) => c.name && c.name.trim().length > 0)
-        .map((c) => {
-          const rpt = c.report || generateEvaluationReport(c.name, c.role, c.state || {});
-          return {
-            id: c.id,
-            candidate: c.name,
-            role: c.role,
-            date: c.interviewDate || new Date().toISOString().split("T")[0],
-            interviewerName: c.interviewerName || "Technical Hiring Manager",
-            candidateEmail: c.email,
-            overallScore: rpt.overallScore,
-            hiringDecision: rpt.hiringDecision,
-            categories: c.state || {},
-            report: rpt,
-          };
-        });
-
-      // Combine without duplicates
-      const map = new Map<string, SavedRecord>();
-      loaded.forEach((r) => map.set(r.id, r));
-      dirRecords.forEach((r) => {
-        if (!map.has(r.id)) map.set(r.id, r);
-      });
-
-      setSavedRecords(Array.from(map.values()));
-    } catch {
-      setSavedRecords([]);
-    }
-  };
-
-  const saveEvaluationToStorage = () => {
-    const { report: rpt, currentCandidate: cand, evaluationState: es, interviewerName: iName, interviewDate: iDate } = useEvalStore.getState();
-    if (!rpt) return;
-    try {
-      const id = "eval-" + Date.now();
-      const idx = getStorageIndex();
-      const dateStr = iDate ? new Date(iDate).toISOString() : new Date().toISOString();
-      idx.unshift({ id });
-      localStorage.setItem("eval-index", JSON.stringify(idx));
-      localStorage.setItem(
-        id,
-        JSON.stringify({
-          id,
-          candidate: cand.name,
-          role: cand.role,
-          date: dateStr,
-          interviewerName: iName,
-          candidateEmail: cand.email,
-          overallScore: rpt.overallScore,
-          hiringDecision: rpt.hiringDecision,
-          categories: es,
-          report: { ...rpt, interviewerName: iName, interviewDate: iDate, candidateEmail: cand.email },
-        })
-      );
-      refreshSavedIndex();
-    } catch (e) {
-      console.error(e);
-    }
-  };
+    initDirectoryFromStorage();
+    refreshSavedRecords();
+  }, []);
 
   const deleteSavedRecord = (id: string) => {
-    try {
-      let idx = getStorageIndex();
-      idx = idx.filter((item) => item.id !== id);
-      localStorage.setItem("eval-index", JSON.stringify(idx));
-      localStorage.removeItem(id);
-      refreshSavedIndex();
-      toast.success("Scorecard deleted");
-    } catch (e) {
-      console.error(e);
-    }
+    fetch(`/api/candidates?id=${encodeURIComponent(id)}`, { method: "DELETE" })
+      .then(() => {
+        refreshSavedRecords();
+        toast.success("Scorecard deleted");
+      })
+      .catch((e) => console.error("Failed to delete record:", e));
   };
 
   const loadSavedRecord = (id: string) => {
-    try {
-      const raw = localStorage.getItem(id);
-      if (!raw) return;
-      const data: SavedRecord = JSON.parse(raw);
-      const s = useEvalStore.getState();
-      s.setCurrentCandidate({ ...s.currentCandidate, name: data.candidate, role: data.role, email: data.candidateEmail || s.currentCandidate.email });
-      if (data.interviewerName) s.setInterviewerName(data.interviewerName);
-      s.setEvaluationState(data.categories);
-      s.setReport(data.report);
-      s.setReportDate(data.date);
-      s.setActiveView("profile");
-      toast.success(`Loaded saved evaluation profile for ${data.candidate}`);
-    } catch (e) {
-      console.error(e);
-    }
+    const data = savedRecords.find((r) => r.id === id);
+    if (!data) return;
+    const s = useEvalStore.getState();
+    s.setCurrentCandidate({ ...s.currentCandidate, name: data.candidate, role: data.role, email: data.candidateEmail || s.currentCandidate.email });
+    if (data.interviewerName) s.setInterviewerName(data.interviewerName);
+    s.setEvaluationState(data.categories);
+    s.setReport(data.report);
+    s.setReportDate(data.date);
+    s.setActiveView("profile");
+    toast.success(`Loaded saved evaluation profile for ${data.candidate}`);
   };
 
   // ── Handlers ──
@@ -244,15 +164,13 @@ export default function Home() {
 
   const handleGenerate = () => {
     generateReport();
-    // Save to localStorage after generation completes
     setTimeout(() => {
-      saveEvaluationToStorage();
       const s = useEvalStore.getState();
       if (s.report && s.report.overallScore >= 80) {
         confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
       }
       toast.success(`Generated evaluation report for ${s.currentCandidate.name}!`);
-    }, 500);
+    }, 400);
   };
 
   const handleSelectCandidate = (cand: import("@/types/candidate").CandidateProfile) => {
@@ -265,8 +183,10 @@ export default function Home() {
   const currentGroup = GROUPS[activeGroupIndex];
   const IconComp = ICON_MAP[currentGroup.icon] || Compass;
 
+  const [searchOpen, setSearchOpen] = useState(false);
+
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#080B11] text-slate-900 dark:text-slate-100 flex flex-col font-sans relative pr-16 md:pr-20 pt-20 transition-colors duration-300">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#080B11] text-slate-900 dark:text-slate-100 flex flex-col font-sans relative pr-16 md:pr-20 pt-20">
       {/* FLOATING HEARTBEAT ACTION DOCK ON RIGHT SIDE */}
       <FloatingRightActionDock
         activeView={activeView}
@@ -276,6 +196,7 @@ export default function Home() {
         onLoadSample={loadAyushData}
         onReset={handleReset}
         onGenerate={handleGenerate}
+        onOpenSearch={() => setSearchOpen(true)}
         isGenerating={isGenerating}
         theme={theme}
         onToggleTheme={handleToggleTheme}
@@ -896,6 +817,8 @@ export default function Home() {
         onDelete={deleteSavedRecord}
       />
       <CommandMenu
+        isOpen={searchOpen}
+        onClose={() => setSearchOpen(false)}
         onLoadSample={loadAyushData}
         onReset={handleReset}
         onGenerate={handleGenerate}

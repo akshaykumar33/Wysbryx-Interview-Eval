@@ -1,5 +1,6 @@
 "use client";
 
+import React, { memo } from "react";
 import { Check, X, HelpCircle, Sparkles, MessageSquare } from "lucide-react";
 import { RichTapEditor } from "@/components/ui/RichTapEditor";
 
@@ -16,7 +17,7 @@ interface InteractiveEvaluationCardProps {
   onOpenRubric: () => void;
 }
 
-export function InteractiveEvaluationCard({
+export const InteractiveEvaluationCard = memo(function InteractiveEvaluationCard({
   id,
   category,
   score,
@@ -48,6 +49,7 @@ export function InteractiveEvaluationCard({
             {category}
           </h4>
           <button
+            type="button"
             onClick={onOpenRubric}
             className="p-1 rounded-full text-slate-400 hover:text-amber-500 hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-colors"
             title={`View evaluation guidelines for ${category}`}
@@ -61,6 +63,7 @@ export function InteractiveEvaluationCard({
           {/* Covered / Missed Pill Toggle */}
           <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-950/80 border border-slate-300 dark:border-slate-800/80 p-1 rounded-full shadow-inner">
             <button
+              type="button"
               onClick={() => onCoveredChange(true)}
               className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer ${
                 covered === true
@@ -72,6 +75,7 @@ export function InteractiveEvaluationCard({
             </button>
 
             <button
+              type="button"
               onClick={() => onCoveredChange(false)}
               className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer ${
                 covered === false
@@ -105,8 +109,9 @@ export function InteractiveEvaluationCard({
             return (
               <button
                 key={num}
+                type="button"
                 onClick={() => onScoreChange(num)}
-                className={`py-2 rounded-xl text-xs font-bold font-mono transition-all cursor-pointer flex items-center justify-center ${
+                className={`py-2 rounded-xl text-xs font-bold font-mono transition-transform duration-100 active:scale-95 cursor-pointer flex items-center justify-center ${
                   isSelected
                     ? "bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-lg shadow-amber-500/30 scale-105"
                     : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-200 dark:hover:bg-slate-900"
@@ -125,6 +130,7 @@ export function InteractiveEvaluationCard({
           {chips.map((chip) => (
             <button
               key={chip}
+              type="button"
               onClick={() => handleChipClick(chip)}
               className="px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-800 text-[11px] text-slate-700 dark:text-slate-300 hover:border-amber-500/60 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-500/10 transition-all cursor-pointer shadow-sm flex items-center gap-1"
             >
@@ -147,4 +153,4 @@ export function InteractiveEvaluationCard({
       </div>
     </div>
   );
-}
+});

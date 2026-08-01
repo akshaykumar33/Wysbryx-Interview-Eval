@@ -26,7 +26,7 @@ export default function SavedModal({ isOpen, records, onClose, onSelect, onDelet
             <Folder className="h-5 w-5 text-amber-500" />
             <span>Saved Evaluation Scorecards ({records.length})</span>
           </div>
-          <button onClick={onClose} className="p-1 text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 rounded-md transition-colors">
+          <button type="button" onClick={onClose} className="p-1 text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 rounded-md transition-colors">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -64,6 +64,7 @@ export default function SavedModal({ isOpen, records, onClose, onSelect, onDelet
                     <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">/100</span>
                   </div>
                   <button
+                    type="button"
                     onClick={(e) => {
                       e.stopPropagation();
                       onDelete(r.id);

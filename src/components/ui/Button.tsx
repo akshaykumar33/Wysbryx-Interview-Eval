@@ -22,19 +22,19 @@ export function Button({
   ...props
 }: ButtonProps) {
   const baseStyles =
-    "inline-flex items-center justify-center font-sans font-semibold transition-all duration-200 focus:outline-none cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed select-none active:scale-[0.97]";
+    "inline-flex items-center justify-center font-sans font-semibold transition-transform duration-150 ease-out focus:outline-none cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed select-none active:scale-95 transform-gpu";
 
   const variantStyles = {
     primary:
       "bg-gradient-to-r from-amber-500 via-amber-500 to-amber-600 text-white font-bold shadow-lg shadow-amber-500/25 border border-amber-400/80 hover:brightness-110 hover:scale-[1.02] hover:shadow-amber-500/35",
     secondary:
-      "bg-slate-900/90 text-slate-100 border border-slate-700/80 hover:border-slate-600 hover:bg-slate-800 hover:text-white shadow-md hover:scale-[1.01]",
+      "bg-slate-900/90 dark:bg-slate-800 text-slate-100 border border-slate-700/80 hover:border-slate-600 hover:bg-slate-800 dark:hover:bg-slate-700 hover:text-white shadow-md hover:scale-[1.01]",
     outline:
-      "border border-slate-700/90 bg-slate-950/60 text-slate-200 hover:border-amber-500/80 hover:text-amber-400 hover:bg-amber-500/10 shadow-sm",
+      "border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950/60 text-slate-800 dark:text-slate-200 hover:border-amber-500/80 hover:text-amber-500 hover:bg-amber-500/10 shadow-sm",
     ghost:
-      "text-slate-300 hover:text-slate-100 hover:bg-slate-800/80 border border-transparent",
+      "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-200/60 dark:hover:bg-slate-800/80 border border-transparent",
     danger:
-      "bg-rose-500/15 text-rose-300 border border-rose-500/40 hover:bg-rose-500 hover:text-white shadow-md shadow-rose-500/10",
+      "bg-rose-500/15 text-rose-600 dark:text-rose-300 border border-rose-500/40 hover:bg-rose-500 hover:text-white shadow-md shadow-rose-500/10",
   };
 
   const sizeStyles = {
@@ -45,6 +45,7 @@ export function Button({
 
   return (
     <button
+      type={props.type || "button"}
       disabled={disabled || isLoading}
       className={`${baseStyles} ${variantStyles[variant]} ${sizeStyles[size]} ${className}`}
       {...props}

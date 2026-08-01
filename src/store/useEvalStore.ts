@@ -37,29 +37,29 @@ function freshCandidate(): CandidateProfile {
 // ─── Ayush Demo Seed ──────────────────────────────────────────
 
 const AYUSH_EVALUATION_DATA: StateMap = {
-  "Product Thinking": { score: 4, covered: false, notes: "Missed. Limited product-thinking approach. Needs to explore the problem space more deeply before jumping into implementation and think from an end-user and business perspective." },
-  "Requirement Analysis": { score: 4, covered: false, notes: "Missed. Requirement gathering was not structured enough. Needs better analysis of business requirements before designing the solution." },
-  "Clarification Questions": { score: 6, covered: true, notes: "Average. Asked some questions but should ask more clarifying questions around edge cases, business rules, constraints, assumptions, and success criteria." },
-  "MVP Thinking": { score: 4, covered: false, notes: "Missed. Focused more on implementation rather than identifying the minimum viable solution and iterative delivery approach." },
-  "System Design": { score: 5, covered: true, notes: "Needs Improvement. Overall system design knowledge requires strengthening from HLD to implementation." },
-  HLD: { score: 5, covered: true, notes: "Needs Improvement. High-level architecture discussions lacked depth, scalability considerations, and architectural reasoning." },
-  LLD: { score: 5, covered: true, notes: "Needs Improvement. LLD concepts, component interactions, and detailed design decisions need improvement." },
-  "Database Design": { score: 6, covered: true, notes: "Average. Database design was acceptable, but normalization, relationships, indexing, and optimization can be improved." },
-  "API Design": { score: 4, covered: true, notes: "Weak. API design fundamentals need improvement. Appeared to have limited backend-oriented thinking while designing APIs." },
-  "Design Patterns": { score: 3, covered: true, notes: "Weak. Limited understanding and practical usage of software design patterns." },
-  RBAC: { score: 5, covered: true, notes: "Partially Implemented. RBAC implementation was incomplete for the given task and lacked fine-grained permission handling." },
-  "Multi Tenancy": { score: 3, covered: false, notes: "Weak. Multi-tenant architecture concepts were not demonstrated." },
-  Security: { score: 3, covered: false, notes: "Weak. Security aspects such as authentication, authorization, validation, OWASP concerns, and secure design were largely missing." },
-  Scalability: { score: 4, covered: false, notes: "Weak. Did not sufficiently discuss scalability strategies such as horizontal scaling, caching, queues, partitioning, or distributed architecture." },
-  Performance: { score: 7, covered: true, notes: "Good. Demonstrated awareness of code structuring and performance optimization during implementation." },
-  "AI Usage": { score: 7, covered: true, notes: "Good but Limited. Uses AI tools like ChatGPT and Gemini effectively but has not yet leveraged AI-assisted IDEs, coding agents, or workflow automation tools." },
-  "Prompt Engineering": { score: 8, covered: true, notes: "Strong. Capable of writing effective single-shot prompts and understands AI-generated logic before implementing it rather than blindly copying code." },
-  "Debugging Ability": { score: 8, covered: true, notes: "Good. Demonstrates strong debugging skills and effectively researches issues to identify solutions." },
-  Communication: { score: 8, covered: true, notes: "Good. Has experience collaborating with cross-cultural teams and demonstrates good communication and collaborative working style. Shows a contractual/ownership mindset while working with teams." },
-  "Tradeoff Analysis": { score: 5, covered: true, notes: "Needs Improvement. Did not sufficiently discuss design trade-offs, alternatives, advantages, disadvantages, or decision rationale." },
-  Leadership: { score: 8, covered: true, notes: "Good Potential. Demonstrates leadership qualities and shows potential to take ownership of teams and technical decisions." },
-  Ownership: { score: 8, covered: true, notes: "Good. Openly accepts mistakes, acknowledges knowledge gaps, and is willing to improve." },
-  "Learning Mindset": { score: 9, covered: true, notes: "Strong. Shows a positive learning attitude, focuses on requirement gathering, planning, execution, and understanding end-user needs before improving solutions." },
+  "Product Thinking": { score: 4, covered: false, notes: "Missed. Limited product-thinking approach." },
+  "Requirement Analysis": { score: 4, covered: false, notes: "Missed. Requirement gathering was not structured enough." },
+  "Clarification Questions": { score: 6, covered: true, notes: "Average. Asked some questions." },
+  "MVP Thinking": { score: 4, covered: false, notes: "Missed. Focused more on implementation." },
+  "System Design": { score: 5, covered: true, notes: "Needs Improvement." },
+  HLD: { score: 5, covered: true, notes: "Needs Improvement." },
+  LLD: { score: 5, covered: true, notes: "Needs Improvement." },
+  "Database Design": { score: 6, covered: true, notes: "Average. Database design was acceptable." },
+  "API Design": { score: 4, covered: true, notes: "Weak. API design fundamentals need improvement." },
+  "Design Patterns": { score: 3, covered: true, notes: "Weak. Limited understanding." },
+  RBAC: { score: 5, covered: true, notes: "Partially Implemented." },
+  "Multi Tenancy": { score: 3, covered: false, notes: "Weak. Multi-tenant architecture concepts missing." },
+  Security: { score: 3, covered: false, notes: "Weak. Security aspects missing." },
+  Scalability: { score: 4, covered: false, notes: "Weak. Scalability strategies missing." },
+  Performance: { score: 7, covered: true, notes: "Good. Code structuring & performance optimization." },
+  "AI Usage": { score: 7, covered: true, notes: "Good but Limited. Uses AI tools like ChatGPT." },
+  "Prompt Engineering": { score: 8, covered: true, notes: "Strong. Capable of writing effective single-shot prompts." },
+  "Debugging Ability": { score: 8, covered: true, notes: "Good. Demonstrates strong debugging skills." },
+  Communication: { score: 8, covered: true, notes: "Good. Collaborative working style." },
+  "Tradeoff Analysis": { score: 5, covered: true, notes: "Needs Improvement." },
+  Leadership: { score: 8, covered: true, notes: "Good Potential. Demonstrates leadership qualities." },
+  Ownership: { score: 8, covered: true, notes: "Good. Openly accepts mistakes." },
+  "Learning Mindset": { score: 9, covered: true, notes: "Strong. Positive learning attitude." },
 };
 
 const AYUSH_REPORT = generateEvaluationReport("Ayush Jaiswal", "Full Stack Engineer", AYUSH_EVALUATION_DATA);
@@ -86,32 +86,20 @@ const AYUSH_PROFILE: CandidateProfile = {
   },
 };
 
-// ─── Persistence Helpers ──────────────────────────────────────
+// ─── Non-Blocking Server API Sync Helpers ──────────────────────
 
-function loadDirectoryFromStorage(): CandidateProfile[] {
-  if (typeof window === "undefined") return [AYUSH_PROFILE];
-  try {
-    const raw = localStorage.getItem("eval-directory");
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        const valid = parsed.filter((c: CandidateProfile) => c.name && c.name.trim().length > 0);
-        if (valid.length > 0) return valid;
-      }
-    }
-  } catch (e) {
-    console.error("Failed to load candidate directory from localStorage:", e);
-  }
-  return [AYUSH_PROFILE];
-}
+let candidateSyncTimer: ReturnType<typeof setTimeout> | null = null;
 
-function saveDirectoryToStorage(directory: CandidateProfile[]) {
-  if (typeof window === "undefined") return;
-  try {
-    localStorage.setItem("eval-directory", JSON.stringify(directory));
-  } catch (e) {
-    console.error("Failed to save candidate directory to localStorage:", e);
-  }
+function syncCandidateToServer(candidate: CandidateProfile) {
+  if (!candidate.name || candidate.name.trim().length === 0) return;
+  if (candidateSyncTimer) clearTimeout(candidateSyncTimer);
+  candidateSyncTimer = setTimeout(() => {
+    fetch("/api/candidates", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(candidate),
+    }).catch((e) => console.error("Failed to sync candidate to server DB:", e));
+  }, 200);
 }
 
 // ─── Store Interface ──────────────────────────────────────────
@@ -151,11 +139,12 @@ interface EvalStore {
   directory: CandidateProfile[];
   setDirectory: (dir: CandidateProfile[]) => void;
   syncCurrentToDirectory: () => void;
-  initDirectoryFromStorage: () => void;
+  initDirectoryFromStorage: () => Promise<void>;
 
   // ── Saved Records ──
   savedRecords: SavedRecord[];
   setSavedRecords: (records: SavedRecord[]) => void;
+  refreshSavedRecords: () => Promise<void>;
 
   // ── UI State ──
   isGenerating: boolean;
@@ -192,7 +181,7 @@ export const useEvalStore = create<EvalStore>((set, get) => ({
   currentCandidate: freshCandidate(),
   setCurrentCandidate: (cand) => set({ currentCandidate: cand }),
   updateCandidateField: (field, value) => {
-    const { currentCandidate, directory, report, evaluationState } = get();
+    const { currentCandidate, directory } = get();
     const updated = { ...currentCandidate, [field]: value as never };
 
     // Sync directory list if candidate is already in directory
@@ -201,37 +190,26 @@ export const useEvalStore = create<EvalStore>((set, get) => ({
       ? directory.map((c) => (c.id === currentCandidate.id ? updated : c))
       : directory;
 
-    if (exists) {
-      saveDirectoryToStorage(updatedDir);
-    }
-
-    // Re-generate report if name or role changed and report exists
-    let updatedReport = report;
-    if (report) {
-      if (field === "name") {
-        updatedReport = generateEvaluationReport(value, currentCandidate.role, evaluationState);
-      } else if (field === "role") {
-        updatedReport = generateEvaluationReport(currentCandidate.name, value, evaluationState);
-      }
+    if (exists && updated.name && updated.name.trim().length > 0) {
+      syncCandidateToServer(updated);
     }
 
     set({
       currentCandidate: updated,
       directory: updatedDir,
-      report: updatedReport,
     });
   },
 
   // ── Interview Metadata ──
   interviewerName: "",
   setInterviewerName: (name) => {
-    const { currentCandidate, updateCandidateField } = get();
+    const { updateCandidateField } = get();
     set({ interviewerName: name });
     updateCandidateField("interviewerName" as never, name);
   },
   interviewDate: new Date().toISOString().split("T")[0],
   setInterviewDate: (date) => {
-    const { currentCandidate, updateCandidateField } = get();
+    const { updateCandidateField } = get();
     set({ interviewDate: date });
     updateCandidateField("interviewDate" as never, date);
   },
@@ -245,7 +223,7 @@ export const useEvalStore = create<EvalStore>((set, get) => ({
       const updatedCand = { ...currentCandidate, state };
       const updatedDir = directory.map((c) => (c.id === currentCandidate.id ? updatedCand : c));
       set({ currentCandidate: updatedCand, directory: updatedDir });
-      saveDirectoryToStorage(updatedDir);
+      syncCandidateToServer(updatedCand);
     }
   },
   setScore: (cat, score) => {
@@ -283,17 +261,27 @@ export const useEvalStore = create<EvalStore>((set, get) => ({
 
   // ── Directory ──
   directory: [AYUSH_PROFILE],
-  setDirectory: (dir) => {
-    set({ directory: dir });
-    saveDirectoryToStorage(dir);
-  },
-  initDirectoryFromStorage: () => {
-    const loaded = loadDirectoryFromStorage();
-    set({ directory: loaded });
+  setDirectory: (dir) => set({ directory: dir }),
+  initDirectoryFromStorage: async () => {
+    try {
+      const res = await fetch("/api/candidates");
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.candidates) && data.candidates.length > 0) {
+          const valid = data.candidates.filter((c: CandidateProfile) => c.name && c.name.trim().length > 0);
+          if (valid.length > 0) {
+            set({ directory: valid });
+            return;
+          }
+        }
+      }
+    } catch (e) {
+      console.error("Failed to load candidates from server API:", e);
+    }
+    set({ directory: [AYUSH_PROFILE] });
   },
   syncCurrentToDirectory: () => {
     const { currentCandidate, directory, evaluationState, interviewerName, interviewDate } = get();
-    // Ignore syncing if name is blank
     if (!currentCandidate.name || currentCandidate.name.trim().length === 0) return;
 
     const candToSync = {
@@ -310,12 +298,59 @@ export const useEvalStore = create<EvalStore>((set, get) => ({
     const cleanDir = updatedDir.filter((c) => c.name && c.name.trim().length > 0);
 
     set({ currentCandidate: candToSync, directory: cleanDir });
-    saveDirectoryToStorage(cleanDir);
+    syncCandidateToServer(candToSync);
   },
 
   // ── Saved Records ──
   savedRecords: [],
   setSavedRecords: (records) => set({ savedRecords: records }),
+  refreshSavedRecords: async () => {
+    try {
+      let loaded: SavedRecord[] = [];
+      try {
+        const res = await fetch("/api/evaluations");
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data.evaluations)) loaded = data.evaluations;
+        }
+      } catch (e) {
+        console.error("Failed to fetch evaluations from API:", e);
+      }
+
+      const { directory } = get();
+      const dirRecords: SavedRecord[] = directory
+        .filter((c) => c.name && c.name.trim().length > 0 && c.report)
+        .map((c) => ({
+          id: c.id,
+          candidate: c.name,
+          role: c.role,
+          date: c.interviewDate || new Date().toISOString(),
+          interviewerName: c.interviewerName || "Technical Hiring Manager",
+          candidateEmail: c.email,
+          overallScore: c.report!.overallScore,
+          hiringDecision: c.report!.hiringDecision,
+          categories: c.state || {},
+          report: c.report!,
+        }));
+
+      const map = new Map<string, SavedRecord>();
+      loaded.forEach((r) => map.set(r.id, r));
+      dirRecords.forEach((r) => {
+        if (!map.has(r.id)) map.set(r.id, r);
+      });
+
+      const nextRecords = Array.from(map.values());
+      const currentRecords = get().savedRecords;
+      if (
+        currentRecords.length !== nextRecords.length ||
+        JSON.stringify(currentRecords.map((r) => r.id)) !== JSON.stringify(nextRecords.map((r) => r.id))
+      ) {
+        set({ savedRecords: nextRecords });
+      }
+    } catch {
+      // ignore
+    }
+  },
 
   // ── UI State ──
   isGenerating: false,
@@ -387,6 +422,7 @@ export const useEvalStore = create<EvalStore>((set, get) => ({
       report: fullReport,
       activeView: "profile",
     });
+    syncCandidateToServer(updatedCand);
   },
 
   loadAyushData: () => {
@@ -422,7 +458,7 @@ export const useEvalStore = create<EvalStore>((set, get) => ({
       directory: updatedDir,
       activeView: "profile",
     });
-    saveDirectoryToStorage(updatedDir);
+    syncCandidateToServer(ayushProf);
   },
 
   generateReport: () => {
@@ -468,7 +504,27 @@ export const useEvalStore = create<EvalStore>((set, get) => ({
         isGenerating: false,
         activeView: "analytics",
       });
-      saveDirectoryToStorage(updatedDir);
-    }, 400);
+      syncCandidateToServer(updatedCandidate);
+
+      // Save evaluation record to server DB
+      const record: SavedRecord = {
+        id: "eval-" + Date.now(),
+        candidate: updatedCandidate.name,
+        role: updatedCandidate.role,
+        date: interviewDate ? new Date(interviewDate).toISOString() : new Date().toISOString(),
+        interviewerName,
+        candidateEmail: updatedCandidate.email,
+        overallScore: fullReport.overallScore,
+        hiringDecision: fullReport.hiringDecision,
+        categories: evaluationState,
+        report: fullReport,
+      };
+
+      fetch("/api/evaluations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(record),
+      }).catch((e) => console.error("Failed to save evaluation to server DB:", e));
+    }, 300);
   },
 }));

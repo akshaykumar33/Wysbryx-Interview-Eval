@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { memo } from "react";
 import { useTheme } from "next-themes";
 import {
   Radar,
@@ -16,7 +16,7 @@ interface SkillRadarChartProps {
   groupScores: { title?: string; group?: string; score: number }[];
 }
 
-export function SkillRadarChart({ groupScores }: SkillRadarChartProps) {
+export const SkillRadarChart = memo(function SkillRadarChart({ groupScores }: SkillRadarChartProps) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
 
@@ -28,14 +28,13 @@ export function SkillRadarChart({ groupScores }: SkillRadarChartProps) {
     else if (name.includes("Security")) shortName = "Security & Scale";
     else if (name.includes("AI")) shortName = "AI & Debug";
     else if (name.includes("Human")) shortName = "Leadership";
-    
-    // Scale score properly 0 to 100
+
     const rawScore = g.score || 0;
     const scaledScore = rawScore <= 10 ? Math.round(rawScore * 10) : rawScore;
 
     return {
       subject: shortName,
-      score: scaledScore, // 0 to 100
+      score: scaledScore,
       fullMark: 100,
     };
   });
@@ -46,9 +45,9 @@ export function SkillRadarChart({ groupScores }: SkillRadarChartProps) {
   const tooltipText = isDark ? "#F8FAFC" : "#0F172A";
 
   return (
-    <div className="w-full h-[360px] p-2 flex items-center justify-center">
-      <ResponsiveContainer width="100%" height="100%">
-        <RadarChart cx="50%" cy="50%" outerRadius="75%" data={data}>
+    <div className="w-full h-[320px] flex items-center justify-center relative min-h-[320px]">
+      <ResponsiveContainer width="99%" height={310}>
+        <RadarChart cx="50%" cy="50%" outerRadius="70%" data={data}>
           <PolarGrid stroke={gridStroke} strokeDasharray="3 3" />
           <PolarAngleAxis
             dataKey="subject"
@@ -78,4 +77,4 @@ export function SkillRadarChart({ groupScores }: SkillRadarChartProps) {
       </ResponsiveContainer>
     </div>
   );
-}
+});

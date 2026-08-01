@@ -1,38 +1,41 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Command } from "cmdk";
 import { Search, Zap, RotateCcw, Sparkles, Folder, Sun, Moon, Laptop, ArrowRight } from "lucide-react";
 import { useTheme } from "next-themes";
 import { GROUPS } from "@/utils/constants";
 
 interface CommandMenuProps {
+  isOpen: boolean;
+  onClose: () => void;
   onLoadSample: () => void;
   onReset: () => void;
   onGenerate: () => void;
   onOpenSaved: () => void;
 }
 
-export function CommandMenu({ onLoadSample, onReset, onGenerate, onOpenSaved }: CommandMenuProps) {
-  const [open, setOpen] = useState(false);
+export function CommandMenu({ isOpen, onClose, onLoadSample, onReset, onGenerate, onOpenSaved }: CommandMenuProps) {
   const { setTheme } = useTheme();
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
-        setOpen((open) => !open);
+        if (isOpen) onClose();
+      } else if (e.key === "Escape" && isOpen) {
+        onClose();
       }
     };
-    document.addEventListener("keydown", down);
-    return () => document.removeEventListener("keydown", down);
-  }, []);
+    window.addEventListener("keydown", down);
+    return () => window.removeEventListener("keydown", down);
+  }, [isOpen, onClose]);
 
-  if (!open) return null;
+  if (!isOpen) return null;
 
   return (
     <div
-      onClick={() => setOpen(false)}
+      onClick={onClose}
       className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-md p-4 animate-in fade-in duration-150"
     >
       <div
@@ -54,7 +57,7 @@ export function CommandMenu({ onLoadSample, onReset, onGenerate, onOpenSaved }: 
               <Command.Item
                 onSelect={() => {
                   onGenerate();
-                  setOpen(false);
+                  onClose();
                 }}
                 className="flex items-center justify-between rounded-xl px-3 py-2.5 text-slate-800 dark:text-slate-200 hover:bg-amber-500 hover:text-white dark:hover:bg-amber-500 dark:hover:text-white cursor-pointer transition-colors"
               >
@@ -68,7 +71,7 @@ export function CommandMenu({ onLoadSample, onReset, onGenerate, onOpenSaved }: 
               <Command.Item
                 onSelect={() => {
                   onLoadSample();
-                  setOpen(false);
+                  onClose();
                 }}
                 className="flex items-center justify-between rounded-xl px-3 py-2.5 text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors"
               >
@@ -82,7 +85,7 @@ export function CommandMenu({ onLoadSample, onReset, onGenerate, onOpenSaved }: 
               <Command.Item
                 onSelect={() => {
                   onOpenSaved();
-                  setOpen(false);
+                  onClose();
                 }}
                 className="flex items-center justify-between rounded-xl px-3 py-2.5 text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors"
               >
@@ -96,7 +99,7 @@ export function CommandMenu({ onLoadSample, onReset, onGenerate, onOpenSaved }: 
               <Command.Item
                 onSelect={() => {
                   onReset();
-                  setOpen(false);
+                  onClose();
                 }}
                 className="flex items-center justify-between rounded-xl px-3 py-2.5 text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors"
               >
@@ -112,7 +115,7 @@ export function CommandMenu({ onLoadSample, onReset, onGenerate, onOpenSaved }: 
               <Command.Item
                 onSelect={() => {
                   setTheme("dark");
-                  setOpen(false);
+                  onClose();
                 }}
                 className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
               >
@@ -122,7 +125,7 @@ export function CommandMenu({ onLoadSample, onReset, onGenerate, onOpenSaved }: 
               <Command.Item
                 onSelect={() => {
                   setTheme("light");
-                  setOpen(false);
+                  onClose();
                 }}
                 className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
               >
@@ -132,7 +135,7 @@ export function CommandMenu({ onLoadSample, onReset, onGenerate, onOpenSaved }: 
               <Command.Item
                 onSelect={() => {
                   setTheme("system");
-                  setOpen(false);
+                  onClose();
                 }}
                 className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
               >
@@ -149,7 +152,7 @@ export function CommandMenu({ onLoadSample, onReset, onGenerate, onOpenSaved }: 
                     const slug = c.toLowerCase().replace(/[^a-z0-9]+/g, "-");
                     const el = document.getElementById("cat-" + slug);
                     if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
-                    setOpen(false);
+                    onClose();
                   }}
                   className="flex items-center justify-between rounded-xl px-3 py-2 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
                 >
