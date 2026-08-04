@@ -34,57 +34,7 @@ function freshCandidate(): CandidateProfile {
   };
 }
 
-// ─── Ayush Demo Seed ──────────────────────────────────────────
 
-const AYUSH_EVALUATION_DATA: StateMap = {
-  "Product Thinking": { score: 4, covered: false, notes: "Missed. Limited product-thinking approach." },
-  "Requirement Analysis": { score: 4, covered: false, notes: "Missed. Requirement gathering was not structured enough." },
-  "Clarification Questions": { score: 6, covered: true, notes: "Average. Asked some questions." },
-  "MVP Thinking": { score: 4, covered: false, notes: "Missed. Focused more on implementation." },
-  "System Design": { score: 5, covered: true, notes: "Needs Improvement." },
-  HLD: { score: 5, covered: true, notes: "Needs Improvement." },
-  LLD: { score: 5, covered: true, notes: "Needs Improvement." },
-  "Database Design": { score: 6, covered: true, notes: "Average. Database design was acceptable." },
-  "API Design": { score: 4, covered: true, notes: "Weak. API design fundamentals need improvement." },
-  "Design Patterns": { score: 3, covered: true, notes: "Weak. Limited understanding." },
-  RBAC: { score: 5, covered: true, notes: "Partially Implemented." },
-  "Multi Tenancy": { score: 3, covered: false, notes: "Weak. Multi-tenant architecture concepts missing." },
-  Security: { score: 3, covered: false, notes: "Weak. Security aspects missing." },
-  Scalability: { score: 4, covered: false, notes: "Weak. Scalability strategies missing." },
-  Performance: { score: 7, covered: true, notes: "Good. Code structuring & performance optimization." },
-  "AI Usage": { score: 7, covered: true, notes: "Good but Limited. Uses AI tools like ChatGPT." },
-  "Prompt Engineering": { score: 8, covered: true, notes: "Strong. Capable of writing effective single-shot prompts." },
-  "Debugging Ability": { score: 8, covered: true, notes: "Good. Demonstrates strong debugging skills." },
-  Communication: { score: 8, covered: true, notes: "Good. Collaborative working style." },
-  "Tradeoff Analysis": { score: 5, covered: true, notes: "Needs Improvement." },
-  Leadership: { score: 8, covered: true, notes: "Good Potential. Demonstrates leadership qualities." },
-  Ownership: { score: 8, covered: true, notes: "Good. Openly accepts mistakes." },
-  "Learning Mindset": { score: 9, covered: true, notes: "Strong. Positive learning attitude." },
-};
-
-const AYUSH_REPORT = generateEvaluationReport("Ayush Jaiswal", "Full Stack Engineer", AYUSH_EVALUATION_DATA);
-
-const AYUSH_PROFILE: CandidateProfile = {
-  id: "cand-ayush",
-  name: "Ayush Jaiswal",
-  role: "Full Stack Engineer",
-  experience: "5+ Years",
-  email: "ayush60000@gmail.com",
-  phone: "+91 98765 43210",
-  location: "India",
-  currentCompany: "Tech Corp",
-  skills: ["React", "Node.js", "AI Prompts", "Debugging", "Communication"],
-  evaluationStatus: "Completed",
-  interviewerName: "Technical Hiring Manager",
-  interviewDate: new Date().toISOString().split("T")[0],
-  state: AYUSH_EVALUATION_DATA,
-  report: {
-    ...AYUSH_REPORT,
-    interviewerName: "Technical Hiring Manager",
-    interviewDate: new Date().toISOString().split("T")[0],
-    candidateEmail: "ayush60000@gmail.com",
-  },
-};
 
 // ─── Non-Blocking Server API Sync Helpers ──────────────────────
 
@@ -261,7 +211,7 @@ export const useEvalStore = create<EvalStore>((set, get) => ({
   setReportDate: (date) => set({ reportDate: date }),
 
   // ── Directory ──
-  directory: [AYUSH_PROFILE],
+  directory: [],
   setDirectory: (dir) => set({ directory: dir }),
   initDirectoryFromStorage: async () => {
     try {
@@ -279,7 +229,7 @@ export const useEvalStore = create<EvalStore>((set, get) => ({
     } catch (e) {
       console.error("Failed to load candidates from server API:", e);
     }
-    set({ directory: [AYUSH_PROFILE] });
+    set({ directory: [] });
   },
   syncCurrentToDirectory: () => {
     const { currentCandidate, directory, evaluationState, interviewerName, interviewDate } = get();
@@ -461,40 +411,21 @@ export const useEvalStore = create<EvalStore>((set, get) => ({
     syncCandidateToServer(updatedCand);
   },
 
-  loadAyushData: () => {
-    const generated = generateEvaluationReport(
-      "Ayush Jaiswal",
-      "Full Stack Engineer",
-      AYUSH_EVALUATION_DATA
-    );
-    const fullReport = {
-      ...generated,
-      interviewerName: "Technical Hiring Manager",
-      interviewDate: new Date().toISOString().split("T")[0],
-      candidateEmail: "ayush60000@gmail.com",
-    };
-
-    const ayushProf: CandidateProfile = {
-      ...AYUSH_PROFILE,
-      report: fullReport,
-    };
-
-    const { directory } = get();
-    const exists = directory.some((c) => c.id === ayushProf.id);
-    const updatedDir = exists
-      ? directory.map((c) => (c.id === ayushProf.id ? ayushProf : c))
-      : [ayushProf, ...directory];
-
-    set({
-      currentCandidate: ayushProf,
-      evaluationState: AYUSH_EVALUATION_DATA,
-      report: fullReport,
-      reportDate: new Date().toISOString(),
-      interviewerName: "Technical Hiring Manager",
-      directory: updatedDir,
-      activeView: "profile",
-    });
-    syncCandidateToServer(ayushProf);
+  loadAyushData: async () => {
+    // Load Ayush from server API
+    try {
+      const res = await fetch("/api/candidates");
+      if (res.ok) {
+        const data = await res.json();
+        const ayush = (data.candidates || []).find((c: CandidateProfile) => c.id === "cand-ayush");
+        if (ayush) {
+          get().selectCandidate(ayush);
+          return;
+        }
+      }
+    } catch (e) {
+      console.error("Failed to load Ayush data from API:", e);
+    }
   },
 
   generateReport: () => {
